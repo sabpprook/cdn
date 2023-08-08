@@ -6,12 +6,6 @@ const itemBorrowCollapse = new mdb.Collapse($("#item-borrow")[0], { toggle: fals
 var sessionKey = localStorage.getItem("sessionKey");
 var sessionExp = localStorage.getItem("sessionExp");
 
-if (sessionKey == null) {
-  loginModal.show();
-} else {
-  sessionCheck(sessionKey);
-}
-
 setInterval(() => {
   sessionKey = localStorage.getItem("sessionKey");
   sessionExp = localStorage.getItem("sessionExp");
@@ -20,6 +14,8 @@ setInterval(() => {
     localStorage.removeItem("sessionKey");
     localStorage.removeItem("sessionExp");
     loginModal.show();
+  } else {
+    sessionCheck(sessionKey);
   }
 }, 3000);
 
