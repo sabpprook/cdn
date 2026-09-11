@@ -1,0 +1,50 @@
+name: FFmpeg Encode
+
+on:
+  workflow_dispatch:
+    inputs:
+      gdrive_id:
+        description: 'Google Drive folder id'
+        required: true
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+           python-version: '3.x'
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y pipx
+      - run: |
+          pipx install gdown
+          pipx ensurepath
+          source ~/.bashrc
+      - run: |
+          gdown "https://drive.google.com/uc?id=1VWxgSTLr8AeJCiNXM0Eh5S53wb0IrHDJ" -O ffmpeg
+          chmod +x ffmpeg
+          mkdir tmp output
+          gdown "https://drive.google.com/drive/folders/${{ inputs.gdrive_id }}" -O tmp
+      - run: |
+          ffmpeg_opts=(
+            -hide_banner
+            -y
+            -pix_fmt yuv420p10le
+            -c:v libx265
+            -g 96
+            -keyint_min 96
+            -preset slow
+            -tune fastdecode
+            -crf 20.5
+            -vf "scale='if(gt(iw,ih),1920,-2)':'if(gt(iw,ih),-2,1920)':flags=lanczos"
+            -c:a copy
+          )
+          for file in tmp/*.mp4; do
+            ./ffmpeg -i "$file" "${ffmpeg_opts[@]}" "output/$(basename "$file")"
+          done
+      - uses: actions/upload-artifact@v7
+        with:
+          path: output/
